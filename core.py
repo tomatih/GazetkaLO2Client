@@ -1,6 +1,7 @@
 import json
 import requests
 from ftplib import FTP
+import os.path
 
 class Article():
     pass
@@ -17,7 +18,7 @@ class Issue():
         return f'Issue {self.number} {self.year}/{self.year+1}, Index: {self.index} ,Published: {self.pub}'
 
     def __repr__(self):
-        self.__str__()
+        return f'Issue {self.number} {self.year}/{self.year+1}, Index: {self.index} ,Published: {self.pub}'
 
     def to_json(self):
         return [self.index,{'date': self.year, 'nr': self.number, 'pub': self.pub}]
@@ -27,10 +28,23 @@ class Gazetka():
     def __init__(self):
         self.issues=[]
         self.ftp=None
+        if not os.path.isfile('tokens.txt'):
+            raise NotConfiguredError
 
     def start_session(self):
-        self.ftp = FTP('www.lo2.opole.pl')
-        
+        try:
+            self.ftp = FTP('www.lo2.opole.pl')
+            with open('tokens.txt','r') as f:
+                tokens = f.read()
+                tokens = tokens.split('\n')
+                self.ftp.login(tokens[0],tokens[1])
+        except Exception as e:
+            print(e) 
+
+    def stop_session(self):
+        if self.ftp:
+            self.ftp.quit()
+            self.ftp=None
 
     def get_issues(self):
         r = requests.get("http://lo2.opole.pl/gazetka/test/assets/issues.json")
@@ -46,4 +60,9 @@ class Gazetka():
         return json.dumps(ret)
 
     def upload_issues(self):
-        pass
+        self.start_session()
+        self.stop_session()
+
+class NotConfiguredError(Exception):
+    def __init__(self):
+        super().__init__("Missing tokens.txt")
