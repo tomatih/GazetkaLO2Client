@@ -1,5 +1,6 @@
 import json
 import requests
+from ftplib import FTP
 
 class Article():
     pass
@@ -25,6 +26,11 @@ class Gazetka():
 
     def __init__(self):
         self.issues=[]
+        self.ftp=None
+
+    def start_session(self):
+        self.ftp = FTP('www.lo2.opole.pl')
+        
 
     def get_issues(self):
         r = requests.get("http://lo2.opole.pl/gazetka/test/assets/issues.json")
@@ -38,3 +44,6 @@ class Gazetka():
             b=a.to_json()
             ret[b[0]] = b[1]
         return json.dumps(ret)
+
+    def upload_issues(self):
+        pass
